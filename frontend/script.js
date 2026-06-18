@@ -12,7 +12,7 @@ const state = {
   authMode: 'login'
 };
 
-const apiBaseUrl = window.API_BASE_URL || window.location.origin;
+const apiBaseUrl = 'http://13.126.51.150:3000';
 
 const recordsBody = document.getElementById('recordsBody');
 const totalCount = document.getElementById('totalCount');
