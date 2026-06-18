@@ -11,7 +11,7 @@ const state = {
   token: ''
 };
 
-const apiBaseUrl = 'http://YOUR_WEB_INSTANCE_PUBLIC_IP:3000';
+const apiBaseUrl = 'http://13.126.51.150:3000';
 
 const recordsBody = document.getElementById('recordsBody');
 const totalCount = document.getElementById('totalCount');
