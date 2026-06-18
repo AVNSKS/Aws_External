@@ -12,15 +12,14 @@ const app = express();
 const port = process.env.PORT || 3000;
 const frontendPath = path.join(__dirname, '..', 'frontend');
 const bcryptRounds = Number(process.env.BCRYPT_ROUNDS || 10);
-const corsOrigins = (process.env.CORS_ORIGIN || '*')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
 const corsOptions = {
-  origin: corsOrigins.includes('*') ? '*' : corsOrigins,
+  origin: true,
   methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204
 };
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 const limits = {
   username: { min: 3, max: 32 },
