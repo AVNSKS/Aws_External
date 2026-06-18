@@ -12,6 +12,15 @@ const app = express();
 const port = process.env.PORT || 3000;
 const frontendPath = path.join(__dirname, '..', 'frontend');
 const bcryptRounds = Number(process.env.BCRYPT_ROUNDS || 10);
+const corsOrigins = (process.env.CORS_ORIGIN || '*')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const corsOptions = {
+  origin: corsOrigins.includes('*') ? '*' : corsOrigins,
+  methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
 
 const limits = {
   username: { min: 3, max: 32 },
@@ -72,7 +81,8 @@ const memoryStore = [...seedRecords];
 const sessions = new Map();
 let pool = null;
 
-app.use(cors());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.static(frontendPath));
 
