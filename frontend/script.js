@@ -8,10 +8,11 @@ const state = {
   records: [],
   role: 'Admin',
   user: '',
-  token: ''
+  token: '',
+  authMode: 'login'
 };
 
-const apiBaseUrl = 'http://13.126.51.150:3000';
+const apiBaseUrl = window.API_BASE_URL || window.location.origin;
 
 const recordsBody = document.getElementById('recordsBody');
 const totalCount = document.getElementById('totalCount');
@@ -25,6 +26,12 @@ const recordForm = document.getElementById('recordForm');
 const roleButtons = document.querySelectorAll('.role-button');
 const loginPanel = document.getElementById('loginPanel');
 const loginForm = document.getElementById('loginForm');
+const authTitle = document.getElementById('authTitle');
+const authSubmitButton = document.getElementById('authSubmitButton');
+const authMessage = document.getElementById('authMessage');
+const authHelp = document.getElementById('authHelp');
+const roleField = document.getElementById('roleField');
+const authTabs = document.querySelectorAll('.auth-tab');
 const appBanner = document.getElementById('appBanner');
 const sessionUser = document.getElementById('sessionUser');
 const sessionRole = document.getElementById('sessionRole');
@@ -58,6 +65,27 @@ async function authFetch(path, options = {}) {
   return fetch(`${apiBaseUrl}${path}`, {
     ...options,
     headers
+  });
+}
+
+function setAuthMode(mode) {
+  state.authMode = mode === 'register' ? 'register' : 'login';
+  const isRegistering = state.authMode === 'register';
+
+  authTitle.textContent = isRegistering ? 'Create an account' : 'Sign in to open the dashboard';
+  authSubmitButton.textContent = isRegistering ? 'Create account' : 'Log in';
+  roleField.hidden = !isRegistering;
+  authMessage.textContent = '';
+  authHelp.innerHTML = isRegistering
+    ? 'New accounts are saved in the backend users table and can log in immediately.'
+    : 'Use one of the seeded accounts with password <strong>demo123</strong>. The dashboard loads the account role after login.';
+
+  const passwordInput = loginForm.elements.password;
+  passwordInput.placeholder = isRegistering ? 'At least 6 characters' : 'demo123';
+  passwordInput.autocomplete = isRegistering ? 'new-password' : 'current-password';
+
+  authTabs.forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.authMode === state.authMode);
   });
 }
 
@@ -211,6 +239,7 @@ async function showApp(session) {
   dashboardContent.hidden = false;
   document.body.classList.remove('login-view');
   document.body.classList.add('dashboard-view');
+  authMessage.textContent = '';
   sessionUser.textContent = `Welcome, ${session.username}`;
   sessionRole.textContent = `Role: ${session.role}`;
   setRole(session.role);
@@ -227,41 +256,48 @@ function showLogin() {
   document.body.classList.remove('dashboard-view');
 }
 
+async function handleAuthSuccess(data) {
+  const session = {
+    token: data.token,
+    username: data.user.username,
+    role: data.user.role
+  };
+
+  saveSession(session);
+  formMessage.textContent = '';
+  await showApp(session);
+}
+
 loginForm.addEventListener('submit', (event) => {
   event.preventDefault();
 
   const formData = new FormData(loginForm);
   const username = String(formData.get('username') || '').trim();
   const password = String(formData.get('password') || '').trim();
+  const role = String(formData.get('role') || 'Staff').trim();
+  const path = state.authMode === 'register' ? '/auth/register' : '/auth/login';
+  const payload = state.authMode === 'register' ? { username, password, role } : { username, password };
 
-  authFetch('/auth/login', {
+  authMessage.textContent = '';
+
+  authFetch(path, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify(payload)
   })
     .then(async (response) => {
       if (!response.ok) {
         const errorBody = await response.json().catch(() => ({}));
-        throw new Error(errorBody.message || 'Unable to log in.');
+        throw new Error(errorBody.message || 'Authentication failed.');
       }
 
       return response.json();
     })
-    .then(async (data) => {
-      const session = {
-        token: data.token,
-        username: data.user.username,
-        role: data.user.role
-      };
-
-      saveSession(session);
-      formMessage.textContent = '';
-      await showApp(session);
-    })
+    .then(handleAuthSuccess)
     .catch((error) => {
-      formMessage.textContent = error.message;
+      authMessage.textContent = error.message;
     });
 });
 
@@ -276,6 +312,10 @@ roleButtons.forEach((button) => {
   button.addEventListener('click', () => setRole(button.dataset.role));
 });
 
+authTabs.forEach((button) => {
+  button.addEventListener('click', () => setAuthMode(button.dataset.authMode));
+});
+
 recordForm.addEventListener('submit', submitRecord);
 refreshButton.addEventListener('click', loadRecords);
 toggleStatusButton.addEventListener('click', updateFirstRecordStatus);
@@ -283,6 +323,7 @@ toggleStatusButton.addEventListener('click', updateFirstRecordStatus);
 const savedSession = getSavedSession();
 
 setRole(state.role);
+setAuthMode(state.authMode);
 
 if (savedSession?.token && savedSession?.username && savedSession?.role) {
   state.token = savedSession.token;

@@ -12,8 +12,13 @@
       <div class="section-heading compact">
         <div>
           <p class="eyebrow">Demo login</p>
-          <h2>Sign in to open the dashboard</h2>
+          <h2 id="authTitle">Sign in to open the dashboard</h2>
         </div>
+      </div>
+
+      <div class="auth-tabs" role="tablist" aria-label="Authentication mode">
+        <button class="auth-tab is-active" id="signInTab" type="button" data-auth-mode="login">Sign in</button>
+        <button class="auth-tab" id="signUpTab" type="button" data-auth-mode="register">Sign up</button>
       </div>
 
       <form id="loginForm" class="login-form">
@@ -27,8 +32,18 @@
           <input name="password" type="password" placeholder="demo123" autocomplete="current-password" required />
         </label>
 
-        <button class="primary-button" type="submit">Log in</button>
-        <p class="login-note">Use one of the seeded accounts with password <strong>demo123</strong>. The dashboard loads the account role after login.</p>
+        <label id="roleField" hidden>
+          Role
+          <select name="role">
+            <option value="Staff">Staff</option>
+            <option value="Manager">Manager</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </label>
+
+        <button class="primary-button" id="authSubmitButton" type="submit">Log in</button>
+        <p id="authMessage" class="form-message auth-message" aria-live="polite"></p>
+        <p class="login-note" id="authHelp">Use one of the seeded accounts with password <strong>demo123</strong>. The dashboard loads the account role after login.</p>
       </form>
     </section>
 

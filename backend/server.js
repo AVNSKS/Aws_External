@@ -15,6 +15,7 @@ const bcryptRounds = Number(process.env.BCRYPT_ROUNDS || 10);
 
 const limits = {
   username: { min: 3, max: 32 },
+  password: { min: 6, max: 128 },
   teamName: { min: 2, max: 120 },
   taskName: { min: 2, max: 200 }
 };
@@ -108,6 +109,19 @@ function validateUsername(username) {
   return null;
 }
 
+function validatePassword(password) {
+  if (!isLengthAllowed(password, limits.password)) {
+    return `password must be between ${limits.password.min} and ${limits.password.max} characters.`;
+  }
+
+  return null;
+}
+
+function normalizeRole(role) {
+  const allowedRoles = ['Admin', 'Manager', 'Staff'];
+  return allowedRoles.includes(role) ? role : 'Staff';
+}
+
 function validateRecordPayload(teamName, taskName) {
   if (!isLengthAllowed(teamName, limits.teamName)) {
     return `teamName must be between ${limits.teamName.min} and ${limits.teamName.max} characters.`;
@@ -198,6 +212,34 @@ async function getUserById(userId) {
 
   const [rows] = await db.execute('SELECT id, username, password_hash, role FROM users WHERE id = ? LIMIT 1', [userId]);
   return rows[0] || null;
+}
+
+async function createUser(user) {
+  const db = await getPool();
+
+  if (!db) {
+    const nextId = memoryUsers.length ? Math.max(...memoryUsers.map((item) => item.id)) + 1 : 1;
+    const createdUser = {
+      id: nextId,
+      username: user.username,
+      password_hash: hashPassword(user.password),
+      role: user.role
+    };
+
+    memoryUsers.push(createdUser);
+    return createdUser;
+  }
+
+  const [result] = await db.execute(
+    'INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)',
+    [user.username, hashPassword(user.password), user.role]
+  );
+
+  return {
+    id: result.insertId,
+    username: user.username,
+    role: user.role
+  };
 }
 
 async function getRecordById(recordId) {
@@ -331,6 +373,55 @@ app.post('/auth/login', async (request, response) => {
   } catch (error) {
     console.error('Failed to authenticate:', error.message);
     response.status(500).json({ message: 'Unable to log in.' });
+  }
+});
+
+app.post('/auth/register', async (request, response) => {
+  const username = String(request.body.username || '').trim();
+  const password = String(request.body.password || '').trim();
+  const role = normalizeRole(String(request.body.role || '').trim());
+
+  if (!username || !password) {
+    response.status(400).json({ message: 'username and password are required.' });
+    return;
+  }
+
+  const usernameError = validateUsername(username);
+  if (usernameError) {
+    response.status(400).json({ message: usernameError });
+    return;
+  }
+
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    response.status(400).json({ message: passwordError });
+    return;
+  }
+
+  try {
+    const existingUser = await getUserByUsername(username);
+
+    if (existingUser) {
+      response.status(409).json({ message: 'Username is already registered.' });
+      return;
+    }
+
+    const user = await createUser({ username, password, role });
+    const token = createToken();
+    sessions.set(token, user.id);
+
+    response.status(201).json({
+      token,
+      user: sanitizeUser(user)
+    });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      response.status(409).json({ message: 'Username is already registered.' });
+      return;
+    }
+
+    console.error('Failed to register:', error.message);
+    response.status(500).json({ message: 'Unable to create account.' });
   }
 });
 

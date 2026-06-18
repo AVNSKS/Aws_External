@@ -19,6 +19,7 @@ database/
 ## Features
 
 - Login role selector for Admin, Manager, and Staff
+- Sign up with username, password, and role
 - Dashboard cards for total, completed, and pending tasks
 - Records table with team name, task name, status, and created date
 - Add record form to insert a new operational record
@@ -56,5 +57,10 @@ Then run the SQL in `database/schema.sql`.
 
 ## API
 
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/logout`
+- `GET /auth/me`
 - `GET /records`
 - `POST /records`
+- `PUT /records/:id/status`
