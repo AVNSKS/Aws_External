@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevSecOps Operations Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="panel login-panel" id="loginPanel">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">Demo login</p>
+          <h2>Sign in to open the dashboard</h2>
+        </div>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <label>
+          Username
+          <input name="username" type="text" placeholder="admin" autocomplete="username" required />
+        </label>
+
+        <label>
+          Password
+          <input name="password" type="password" placeholder="demo123" autocomplete="current-password" required />
+        </label>
+
+        <button class="primary-button" type="submit">Log in</button>
+        <p class="login-note">Use one of the seeded accounts with password <strong>demo123</strong>. The dashboard loads the account role after login.</p>
+      </form>
+    </section>
+
+    <section class="panel app-banner" id="appBanner" hidden>
+      <p class="eyebrow">Session active</p>
+      <div class="app-banner-row">
+        <div>
+          <h2 id="sessionUser">Welcome</h2>
+          <p id="sessionRole" class="login-note">Role: Admin</p>
+        </div>
+        <button class="ghost-button" id="logoutButton" type="button">Log out</button>
+      </div>
+    </section>
+
+    <div id="dashboardContent" hidden>
+      <section class="hero panel">
+        <div>
+          <p class="eyebrow">Internal DevSecOps dashboard</p>
+          <h1>Track operational work, approvals, and task status in one view.</h1>
+          <p class="lede">
+            Use the role selector to switch the dashboard context, review live operational records, and add new items without leaving the page.
+          </p>
+        </div>
+
+        <div class="role-card">
+          <div class="role-copy">
+            <span class="pill">Login role selector</span>
+            <strong id="roleLabel">Admin</strong>
+            <p id="roleDescription">Full access to manage every record and review team performance.</p>
+          </div>
+
+          <div class="role-switcher" role="tablist" aria-label="Select dashboard role">
+            <button class="role-button is-active" data-role="Admin" type="button">Admin</button>
+            <button class="role-button" data-role="Manager" type="button">Manager</button>
+            <button class="role-button" data-role="Staff" type="button">Staff</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats" aria-label="Dashboard statistics">
+        <article class="stat-card panel">
+          <span>Total tasks</span>
+          <strong id="totalCount">0</strong>
+        </article>
+        <article class="stat-card panel">
+          <span>Completed tasks</span>
+          <strong id="completedCount">0</strong>
+        </article>
+        <article class="stat-card panel">
+          <span>Pending tasks</span>
+          <strong id="pendingCount">0</strong>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel table-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Operational records</p>
+              <h2>Current tasks</h2>
+            </div>
+            <div class="toolbar-actions">
+              <button class="ghost-button" id="refreshButton" type="button">Refresh</button>
+              <button class="ghost-button" id="toggleStatusButton" type="button">Toggle first status</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Created by</th>
+                  <th>Team name</th>
+                  <th>Task name</th>
+                  <th>Status</th>
+                  <th>Created date</th>
+                </tr>
+              </thead>
+              <tbody id="recordsBody">
+                <tr>
+                  <td colspan="4" class="empty-state">Loading records...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <aside class="panel form-panel">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Add record</p>
+              <h2>Insert operational item</h2>
+            </div>
+          </div>
+
+          <form id="recordForm" class="record-form">
+            <label>
+              Team name
+              <input name="teamName" type="text" placeholder="Platform" required />
+            </label>
+
+            <label>
+              Task name
+              <input name="taskName" type="text" placeholder="Patch Linux nodes" required />
+            </label>
+
+            <label>
+              Status
+              <select name="status">
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="blocked">Blocked</option>
+              </select>
+            </label>
+
+            <button class="primary-button" type="submit">Add record</button>
+            <p id="formMessage" class="form-message" aria-live="polite"></p>
+          </form>
+        </aside>
+      </section>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
